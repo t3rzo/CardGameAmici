@@ -1,0 +1,116 @@
+/* css/form.css */
+
+/* 🌟 Reset globale */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 📄 Corpo pagina */
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    /* Sfondo blu sfumato originale */
+    background: linear-gradient(135deg, #1e3c72, #2a5298); 
+    color: #fff;
+    /* Centramento perfetto della pagina */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* 🧱 Container centrale */
+.container {
+    width: 100%;
+    max-width: 500px; /* Ridotto un po' perché non è una tabella larga */
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.6); /* Trasparenza elegante */
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center; /* Centra tutto il contenuto */
+}
+
+/* ✨ Titolo elegante */
+h1 {
+    font-size: 2.2rem;
+    margin-bottom: 30px;
+    color: #ffdd57; /* Giallo dorato per contrasto */
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.6);
+}
+
+/* 📝 Stile del Form */
+form {
+    display: flex;
+    flex-direction: row;
+    max-width: 45%;
+    gap: 20px; /* Spazio tra gli elementi */
+}
+
+/* ⌨️ Campi di Input (Casella di testo) */
+input[type="text"] {
+    padding: 15px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1.1rem;
+    background-color: rgba(255, 255, 255, 0.9); /* Bianco quasi solido */
+    color: #333;
+    outline: none;
+    transition: transform 0.2s;
+}
+
+input[type="text"]:focus {
+    transform: scale(1.02); /* Leggero zoom quando scrivi */
+    box-shadow: 0 0 15px rgba(255, 221, 87, 0.5); /* Alone giallo */
+}
+
+/* 🟣 Bottone Cerca (Usa il gradient viola della vecchia tabella) */
+input[type="submit"] {
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    text-transform: uppercase;
+    cursor: pointer;
+    /* Qui riuso il gradient che ti piaceva nella tabella */
+    background: linear-gradient(90deg, #6a0dad, #9b30ff); 
+    box-shadow: 0 4px 15px rgba(106, 13, 173, 0.4);
+    transition: all 0.3s ease;
+}
+
+input[type="submit"]:hover {
+    transform: translateY(-3px); /* Si alza leggermente */
+    box-shadow: 0 6px 20px rgba(106, 13, 173, 0.6);
+}
+
+/* 📄 Stile per i Risultati (paragrafi) */
+p {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    margin-top: 20px;
+    background-color: rgba(255, 255, 255, 0.1); /* Sfondo leggerissimo per il testo */
+    padding: 15px;
+    border-radius: 8px;
+}
+
+/* ⚠️ Override per l'errore rosso (opzionale, per renderlo più leggibile su scuro) */
+p[style*="color: red"] {
+    color: #ff6b6b !important; /* Un rosso più chiaro e leggibile su sfondo scuro */
+    font-weight: bold;
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.card.rarity-mitico::after {
+    content: "";
+    position: absolute;
+    top: -100%; left: -100%;
+    width: 300%; height: 300%;
+    background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.3) 50%, transparent 80%);
+    transition: 0.5s;
+    pointer-events: none;
+}
+.card.rarity-mitico:hover::after {
+    top: 100%; left: 100%;
+}

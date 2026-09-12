@@ -53,6 +53,7 @@ $authors = loadCards(); // Carica carte base + custom JSON
         </div>
         <div class="hud-right">
             <div class="currency-display"><span class="ff-icon">💎</span> <span id="fFCount">0</span></div>
+            <button class="ctrl-btn" id="dailyTaskBtn" title="Task Giornaliera" onclick="checkDailyTask()" style="background:rgba(39,174,98,0.4); border-color:#27ae60; color:#27ae60;">🎁</button>
             <button class="ctrl-btn" id="themeToggle" title="Cambia tema" onclick="toggleTheme()">◐</button>
             <button class="ctrl-btn" id="collectionToggle" title="Collezione" onclick="toggleCollection()">📚</button>
         </div>
@@ -201,6 +202,61 @@ $authors = loadCards(); // Carica carte base + custom JSON
             level: save.level, xp: save.xp, equipped: save.equipped
         }));
         localStorage.setItem(CURRENCY_KEY, save.fF.toString());
+    }
+
+    // Sistema task giornaliera
+    const DAILY_KEY = 'dailyTask';
+
+    function checkDailyTask() {
+        const today = new Date().toDateString();
+        let daily = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
+        if (daily.date !== today) {
+            // Nuovo task giornaliero
+            daily = {
+                date: today,
+                task: 'collect_3_cards',
+                reward: 150,
+                done: false,
+            };
+        }
+        localStorage.setItem(DAILY_KEY, JSON.stringify(daily));
+
+        const btn = document.getElementById('dailyTaskBtn');
+        if (daily.done) {
+            btn.style.background = 'rgba(231, 76, 60, 0.4)';
+            btn.style.borderColor = '#e74c3c';
+            btn.style.color = '#e74c3c';
+            showHintGlobal('✓ Task completato! Ritorna domani per un nuovo SFIDA!', 0, '#27ae60');
+            return;
+        }
+
+        // Simula completamento (in futuro: check collezione o combattimento)
+        daily.done = true;
+        localStorage.setItem(DAILY_KEY, JSON.stringify(daily));
+        let ff = parseInt(localStorage.getItem(CURRENCY_KEY) || '0');
+        ff += daily.reward;
+        localStorage.setItem('gachaCurrency', ff.toString());
+        document.getElementById('fFCount').textContent = ff;
+        btn.style.background = 'rgba(231, 76, 60, 0.4)';
+        btn.style.borderColor = '#e74c3c';
+        btn.style.color = '#e74c3c';
+        showHintGlobal('🎁 Task completato! +' + daily.reward + ' Fragment!', 0, '#27ae60');
+    }
+
+    function showHintGlobal(msg, duration = 3000, color = 'var(--cyber-cyan)') {
+        let h = document.getElementById('globalHint');
+        if (!h) {
+            h = document.createElement('div');
+            h.id = 'globalHint';
+            h.style.cssText = 'position:fixed; bottom:30px; left:50%; transform:translateX(-50%); padding:10px 20px; border-radius:8px; font-family:Orbitron; font-size:13px; z-index:10001; text-align:center; opacity:0; transition:opacity 0.3s;';
+            document.body.appendChild(h);
+        }
+        h.textContent = msg;
+        h.style.color = color;
+        h.style.border = '1px solid ' + color;
+        h.style.background = 'rgba(0,0,0,0.7)';
+        h.style.opacity = '1';
+        setTimeout(() => { h.style.opacity = '0'; }, duration);
     }
 
     // Inizializza HUD

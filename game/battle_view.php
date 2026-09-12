@@ -121,7 +121,7 @@ $enemyCurrentHp = $enemy['vita'];
     <!-- Pulsanti azione -->
     <div class="battle-actions" id="battleActions">
         <button class="action-btn attack" onclick="playerAttack()">⚔️ Attacca</button>
-        <button class="action-btn skill" id="skillBtn" onclick="playerSkill()" disabled>⚡ Skill (CD: 3)</button>
+        <button class="action-btn skill" id="skillBtn" onclick="playerSkill()" disabled>⚡ Skill</button>
         <button class="action-btn item" onclick="useItem()">🧪 Item</button>
         <button class="action-btn flee" onclick="attemptFlee()">🏃 Scappa</button>
     </div>
@@ -136,6 +136,25 @@ const PLAYER_STATS = <?php echo json_encode($playerStats); ?>;
 const ENEMY_DATA = <?php echo json_encode($enemy); ?>;
 const CARD_NAME = <?php echo json_encode($selectedCardName); ?>;
 const FF_MULT = <?php echo $ffMult; ?>;
+
+// Skill del giocatore (se sbloccate) — caricate da PHP
+const PLAYER_SKILLS = <?php
+require_once __DIR__ . '/../config/skills.php';
+// Ottieni skill della carta (se in mappa, o random)
+$unlocked = [];
+if (isset($cardSkills[$selectedCardName])) {
+    $unlocked = $cardSkills[$selectedCardName];
+} else {
+    // Random 2 skill
+    $allKeys = array_keys($skillNames);
+    shuffle($allKeys);
+    $unlocked = array_slice($allKeys, 0, 2);
+}
+echo json_encode([
+    'skill_keys' => $unlocked,
+    'skill_defs' => $skillNames,
+]);
+?>;
 
 // Cambia zona (ricarica pagina con nuova zona + carta)
 function changeZone() {
@@ -164,10 +183,15 @@ let enemyHp = ENEMY_DATA.vita;
 const enemyMaxHp = ENEMY_DATA.vita;
 
 let playerTurn = true;
+// Sistema skill (usa prima skill sbloccata)
+const skillDefs = PLAYER_SKILLS.skill_defs;
+const unlockedSkillKeys = PLAYER_SKILLS.skill_keys || [];
+let activeSkill = unlockedSkillKeys[0] || 'potere_furia'; // default
 let skillCooldown = 0;
-const SKILL_NAME = "Colpo Potente";
-const SKILL_CD = 3;
-const SKILL_MULTIPLIER = 1.5;
+
+function getSkillDef(key) {
+    return skillDefs[key] || skillDefs['potere_furia'];
+}
 
 // Aggiorna HP bar
 function updateHpBars() {
@@ -243,12 +267,39 @@ function playerAttack() {
 function playerSkill() {
     if (skillCooldown > 0) return;
     if (!playerTurn) return;
-    const dmg = Math.floor(calcDamage(PLAYER_STATS.attacco, ENEMY_DATA.difesa) * SKILL_MULTIPLIER);
-    enemyHp -= dmg;
+    const def = getSkillDef(activeSkill);
+    playSfx('attack');
     animateSprite(document.getElementById('enemySprite'), false);
-    addLog('⚡ Hai usato ' + SKILL_NAME + ' e inflitto ' + dmg + ' danni a ' + ENEMY_DATA.nome + '!');
-    updateHpBars();
-    skillCooldown = SKILL_CD;
+
+    // Gestione skill diversi
+    if (def.multiplier) {
+        const dmg = Math.floor(calcDamage(PLAYER_STATS.attacco, ENEMY_DATA.difesa) * def.multiplier);
+        enemyHp -= dmg;
+        addLog(def.icon + ' Hai usato ' + def.nome + ' e inflitto ' + dmg + ' danni!');
+        updateHpBars();
+    } else if (def.heal_pct) {
+        const heal = Math.floor(playerMaxHp * def.heal_pct);
+        playerHp = Math.min(playerMaxHp, playerHp + heal);
+        addLog(def.icon + ' Hai usato ' + def.nome + ' e curato ' + heal + ' HP!');
+        updateHpBars();
+    } else if (def.double_attack) {
+        const dmg1 = calcDamage(PLAYER_STATS.attacco, ENEMY_DATA.difesa);
+        const dmg2 = Math.floor(calcDamage(PLAYER_STATS.attacco, ENEMY_DATA.difesa) * 0.7);
+        enemyHp -= (dmg1 + dmg2);
+        addLog(def.icon + ' Hai usato ' + def.nome + ': due colpi (' + dmg1 + ' + ' + dmg2 + ')!');
+        updateHpBars();
+    } else if (def.guaranteed_crit) {
+        let dmg = PLAYER_STATS.attacco - (ENEMY_DATA.difesa * 0.3);
+        dmg = Math.floor(dmg * 1.5);
+        enemyHp -= dmg;
+        addLog(def.icon + ' Hai usato ' + def.nome + ' e inflitto ' + dmg + ' danni (CRIT GARANTITO)!');
+        updateHpBars();
+    } else if (def.buff) {
+        addLog(def.icon + ' Hai usato ' + def.nome + ': aumenti la difesa per 2 turni!');
+        // TODO: implementare buff timer
+    }
+
+    skillCooldown = def.cd;
     updateSkillCd();
 
     if (enemyHp <= 0) {
@@ -291,12 +342,18 @@ function enemyTurn() {
 
 function updateSkillCd() {
     const btn = document.getElementById('skillBtn');
+    const def = getSkillDef(activeSkill);
+    if (unlockedSkillKeys.length === 0) {
+        btn.disabled = true;
+        btn.textContent = '⚡ Nessuna Skill';
+        return;
+    }
     if (skillCooldown > 0) {
         btn.disabled = true;
-        btn.textContent = '⚡ ' + SKILL_NAME + ' (CD: ' + skillCooldown + ')';
+        btn.textContent = def.icon + ' ' + def.nome + ' (' + skillCooldown + ')';
     } else {
         btn.disabled = false;
-        btn.textContent = '⚡ ' + SKILL_NAME;
+        btn.textContent = def.icon + ' ' + def.nome;
     }
 }
 
@@ -310,9 +367,25 @@ function endBattle(victory, flee = false) {
     }
     if (victory) {
         playSfx('victory');
+
+        // Drop equipaggiamento (15% chance per vittoria)
+        const ALL_EQUIPMENT_LOCAL = <?php
+        require_once __DIR__ . '/../config/equipment.php';
+        echo json_encode($allEquipment);
+        ?>;
+        let dropMsg = '';
+        if (Math.random() < 0.15) {
+            const drop = ALL_EQUIPMENT_LOCAL[Math.floor(Math.random() * ALL_EQUIPMENT_LOCAL.length)];
+            const equipSave = JSON.parse(localStorage.getItem('equippedItems') || '{}');
+            if (!equipSave.inventory) equipSave.inventory = [];
+            equipSave.inventory.push(drop);
+            localStorage.setItem('equippedItems', JSON.stringify(equipSave));
+            dropMsg = ' 🎁 Drop: <strong>' + drop.nome + '</strong> (' + drop.tipo + ')';
+        }
+
         const xpGain = Math.floor(ENEMY_DATA.xp_drop * FF_MULT);
         const ffGain = Math.floor((Math.random() * (ENEMY_DATA.ff_drop_max - ENEMY_DATA.ff_drop_min + 1) + ENEMY_DATA.ff_drop_min) * FF_MULT);
-        addLog('🏆 HAI VINTO! Guadagnato: ' + xpGain + ' XP, ' + ffGain + ' Fragment');
+        addLog('🏆 HAI VINTO! Guadagnato: ' + xpGain + ' XP, ' + ffGain + ' Fragment' + dropMsg);
 
         // Aggiungi XP e FF al salvataggio
         const save = JSON.parse(localStorage.getItem('cardGameSave') || '{}');

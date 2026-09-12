@@ -275,6 +275,15 @@ $authors = loadCards(); // Carica carte base + custom JSON
     // Inizializza HUD
     window.addEventListener('DOMContentLoaded', () => {
         const save = loadSave();
+        // Bonus di benvenuto per nuovi giocatori (100 FF iniziali)
+        if (!localStorage.getItem('welcomeBonus')) {
+            let ff = parseInt(localStorage.getItem(CURRENCY_KEY) || '0');
+            ff += 100;
+            localStorage.setItem('gachaCurrency', ff.toString());
+            localStorage.setItem('welcomeBonus', 'true');
+            save.fF = ff;
+            showHintGlobal('🎁 Benvenuto! Hai ricevuto 100 Fragment per iniziare!', 4000, '#27ae60');
+        }
         document.getElementById('playerLevel').textContent = save.level;
         document.getElementById('fFCount').textContent = save.fF;
         updateRaritiesCounter();

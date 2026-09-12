@@ -104,9 +104,8 @@ if ($author_query !== "") {
                     + Aggiungi alla Collezione
                 </button>
 
-                <!-- Fight button (only if collected) -->
-                <?php if (isset($collection[$matched_name])): ?>
-                <button class="collect-btn" id="fightBtn" onclick="window.location.href='?mode=game&card=<?php echo urlencode($matched_name); ?>';" style="margin-left: 10px; background: var(--cyber-pink); color: #fff;">
+                <!-- Fight button (always shown; JS handles collected check) -->
+                <button class="collect-btn" id="fightBtn" onclick="startBattle()" style="margin-left: 10px; background: var(--cyber-pink); color: #fff;">
                     ⚔️ Combatti!
                 </button>
 
@@ -125,9 +124,8 @@ if ($author_query !== "") {
                         <div id="slotAccessory" style="color:#888; font-size:10px; margin-top:3px;">VUOTO</div>
                     </div>
                 </div>
-                <?php endif; ?>
 
-                            <!-- Admin link -->
+                <!-- Admin link -->
                 <div style="margin-top:12px;">
                     <a href="admin.php" style="color:var(--rpg-gold); font-family:'Orbitron'; font-size:12px; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
                         ℹ️ Aggiungi una Carta
@@ -189,6 +187,15 @@ input.addEventListener('input', async () => {
         });
     } else suggBox.style.display = 'none';
 });
+
+// Inizia combattimento (verifica carta collezionata)
+function startBattle() {
+    if (collection[matchedName]) {
+        window.location.href = '?mode=game&card=' + encodeURIComponent(matchedName);
+    } else {
+        alert('Devi prima aggiungere questa carta alla collezione per combattere con lei!');
+    }
+}
 
 // Collect logic
 function toggleCollect(name, rarity) {

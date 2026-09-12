@@ -165,20 +165,39 @@ function changeZone() {
     window.location.href = '?mode=game&card=' + encodeURIComponent(CARD_NAME) + '&zone=' + zone;
 }
 
-// Sound effect helper (usa MP3 esistenti o sintetizza)
+// Sound effect helper — sintetizza suoni via Web Audio API (evita file mancanti)
 function playSfx(type) {
-    let soundFile = '';
-    const sfxMap = {
-        'attack': './sounds/' + encodeURIComponent(CARD_NAME) + '.mp3',
-        'hit': './sounds/glitch.mp3',
-        'victory': './sounds/' + encodeURIComponent(CARD_NAME) + '.mp3',
-        'levelup': './sounds/' + encodeURIComponent(CARD_NAME) + '.mp3',
-    };
-    soundFile = sfxMap[type] || '';
-    if (soundFile) {
-        new Audio(soundFile).play().catch(e => {});
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const cfg = {
+            'attack': { type: 'square', freq: [400, 300, 200], dur: 0.15, gain: 0.2 },
+            'hit':    { type: 'sawtooth', freq: [200, 100, 50], dur: 0.1, gain: 0.3 },
+            'victory': { type: 'sine', freq: [523, 659, 784, 1046], dur: 0.4, gain: 0.25 },
+            'levelup': { type: 'sine', freq: [392, 523, 659, 784], dur: 0.5, gain: 0.3 },
+            'glitch':   { type: 'sawtooth', freq: [400, 1200, 300, 900], dur: 0.2, gain: 0.25 },
+        }[type] || cfg_attack;
+
+        osc.type = cfg.type;
+        gain.gain.value = cfg.gain;
+        osc.frequency.setValueAtTime(cfg.freq[0], ctx.currentTime);
+
+        let t = ctx.currentTime;
+        for (let i = 1; i < cfg.freq.length; i++) {
+            t += cfg.dur / cfg.freq.length;
+            osc.frequency.setValueAtTime(cfg.freq[i], t);
+        }
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + cfg.dur);
+    } catch(e) {
+        // Web Audio non supportato
     }
 }
+const cfg_attack = { type: 'square', freq: [400,300,200], dur: 0.15, gain: 0.2 };
 
 let playerHp = PLAYER_STATS.vita;
 const playerMaxHp = PLAYER_STATS.vita;

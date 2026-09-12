@@ -232,7 +232,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const desc = document.getElementById('mainDesc');
             setTimeout(() => {
                 card.classList.add('glitch-active');
-                new Audio('./sounds/glitch.mp3').play().catch(e => {});
+                playGlitchSound();
                 setTimeout(() => {
                     document.querySelector('.search-container').style.opacity = '0';
                     setTimeout(() => { document.querySelector('.search-container').style.display = 'none'; }, 300);
@@ -291,6 +291,25 @@ function triggerPasta() {
     }
 }
 document.addEventListener('click', (e) => { if(e.target !== input) suggBox.style.display = 'none'; });
+
+// Glitch sound syntetico (sostituisce glitch.mp3 mancante)
+function playGlitchSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        gain.gain.value = 0.2;
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        let t = ctx.currentTime;
+        [1200, 300, 900, 150, 800].forEach((f, i) => {
+            t += 0.05; osc.frequency.setValueAtTime(f, t);
+        });
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+    } catch(e) {}
+}
 
 // =================== EQUIPAGGIAMENTO ===================
 const EQUIP_KEY = 'equippedItems';

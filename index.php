@@ -37,7 +37,7 @@ $authors = loadCards(); // Carica carte base + custom JSON
     .tab-nav .tab:hover { background: rgba(255,255,255,0.2); color: #fff; }
     </style>
 </head>
-<body class="gallery-theme">
+<body class="gallery-theme body-forest">
     <div class="scanline-overlay"></div>
     <div id="flash-overlay"></div>
 
@@ -63,6 +63,8 @@ $authors = loadCards(); // Carica carte base + custom JSON
         <div class="tab" onclick="switchMode('gallery')">🏠 Galleria</div>
         <div class="tab" onclick="switchMode('gacha')">🎰 Gacha</div>
         <div class="tab" onclick="switchMode('game')">⚔️ Combatti</div>
+        <div class="tab" onclick="switchMode('collections')">🎒 Collezione</div>
+        <div class="tab"><a href="admin.php" style="color:inherit;text-decoration:none;">ℹ️ Admin</a></div>
     </div>
 
     <!-- Contenuto principale -->

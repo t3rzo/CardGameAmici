@@ -1,14 +1,15 @@
 <?php
-// battle_view.php — Combattimento a turni contro un nemico
+// battle_view.php — Combattimento a turni contro un nemico (con sistema zone)
 require_once __DIR__ . '/../config/enemies.php';
+require_once __DIR__ . '/../config/zones.php';
 
 $selectedCardName = $_GET['card'] ?? null;
+$selectedZone = $_GET['zone'] ?? 'foresta';
 $selectedCard = null;
 $playerStats = null;
+
 // Se c'è una carta selezionata, usa i suoi stats potenziati
 if ($selectedCardName) {
-    // Carica collezione from localStorage (non disponibile in PHP)
-    // Per ora usiamo stats base
     if (isset($authors[$selectedCardName])) {
         $selectedCard = $authors[$selectedCardName];
         $playerStats = [
@@ -23,11 +24,28 @@ if ($selectedCardName) {
 // Se nessuna carta selezionata, usa una default
 if (!$playerStats) {
     $selectedCardName = 'Michele Castaldo';
-    $playerStats = ['attacco' => 22, 'vita' => 12, 'difesa' => 18, 'velocità' => 15]; // comune
+    $playerStats = ['attacco' => 22, 'vita' => 12, 'difesa' => 18, 'velocità' => 15];
 }
 
-// Scegli un nemico casuale (o basato su area)
-$enemy = $enemies[array_rand($enemies)];
+// Trova il nemico in base alla zona (fallback a tutti)
+$zone = null;
+foreach ($zones as $z) {
+    if ($z['id'] === $selectedZone) { $zone = $z; break; }
+}
+if (!$zone) { $zone = $zones[0]; }
+
+// Filtra nemici per zona (se l'nemico è nel pool zona), altrimenti tutti
+$enemyCandidates = [];
+foreach ($enemies as $e) {
+    if (in_array($e['nome'], $zone['enemy_pool'])) {
+        $enemyCandidates[] = $e;
+    }
+}
+if (empty($enemyCandidates)) $enemyCandidates = $enemies;
+$enemy = $enemyCandidates[array_rand($enemyCandidates)];
+// Scale enemy by zone difficulty
+$enemy['lvl'] = max($enemy['lvl'], $zone['livello_min']);
+$ffMult = $zone['ff_reward_multiplier'] ?? 1.0;
 
 // HP correnti = vita base
 $playerCurrentHp = $playerStats['vita'];
@@ -37,6 +55,16 @@ $enemyCurrentHp = $enemy['vita'];
 <div class="battle-container" id="battleContainer">
     <!-- HUD combattimento -->
     <div class="battle-hud">
+        <div class="zone-selector" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-family:'Orbitron'; color:var(--rpg-gold); font-size:11px;">📍 ZONA:</span>
+            <select id="zoneSelect" onchange="changeZone()" style="background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--rpg-gold); border-radius:6px; padding:4px 8px; font-family:'Orbitron'; font-size:11px;">
+                <?php foreach ($zones as $z): ?>
+                    <option value="<?php echo $z['id']; ?>" <?php echo ($z['id'] === $selectedZone) ? 'selected' : ''; ?>>
+                        <?php echo $z['nome']; ?> (Lv≥<?php echo $z['livello_min']; ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
         <div class="battle-enemy-info">
             <div class="entity-name"><?php echo $enemy['nome']; ?> <span style="color:#ff6b6b; font-size:12px;">[Lv.<?php echo $enemy['lvl']; ?>]</span></div>
             <div class="entity-hp-bar">
@@ -107,6 +135,28 @@ $enemyCurrentHp = $enemy['vita'];
 const PLAYER_STATS = <?php echo json_encode($playerStats); ?>;
 const ENEMY_DATA = <?php echo json_encode($enemy); ?>;
 const CARD_NAME = <?php echo json_encode($selectedCardName); ?>;
+const FF_MULT = <?php echo $ffMult; ?>;
+
+// Cambia zona (ricarica pagina con nuova zona + carta)
+function changeZone() {
+    const zone = document.getElementById('zoneSelect').value;
+    window.location.href = '?mode=game&card=' + encodeURIComponent(CARD_NAME) + '&zone=' + zone;
+}
+
+// Sound effect helper (usa MP3 esistenti o sintetizza)
+function playSfx(type) {
+    let soundFile = '';
+    const sfxMap = {
+        'attack': './sounds/' + encodeURIComponent(CARD_NAME) + '.mp3',
+        'hit': './sounds/glitch.mp3',
+        'victory': './sounds/' + encodeURIComponent(CARD_NAME) + '.mp3',
+        'levelup': './sounds/' + encodeURIComponent(CARD_NAME) + '.mp3',
+    };
+    soundFile = sfxMap[type] || '';
+    if (soundFile) {
+        new Audio(soundFile).play().catch(e => {});
+    }
+}
 
 let playerHp = PLAYER_STATS.vita;
 const playerMaxHp = PLAYER_STATS.vita;
@@ -173,6 +223,7 @@ function playerAttack() {
     if (!playerTurn) return;
     const dmg = calcDamage(PLAYER_STATS.attacco, ENEMY_DATA.difesa);
     enemyHp -= dmg;
+    playSfx('attack');
     animateSprite(document.getElementById('enemySprite'), false);
     addLog('⚔️ Hai inflitto ' + dmg + ' danni a ' + ENEMY_DATA.nome + '!');
     updateHpBars();
@@ -258,8 +309,9 @@ function endBattle(victory, flee = false) {
         return;
     }
     if (victory) {
-        const xpGain = ENEMY_DATA.xp_drop;
-        const ffGain = Math.floor(Math.random() * (ENEMY_DATA.ff_drop_max - ENEMY_DATA.ff_drop_min + 1)) + ENEMY_DATA.ff_drop_min;
+        playSfx('victory');
+        const xpGain = Math.floor(ENEMY_DATA.xp_drop * FF_MULT);
+        const ffGain = Math.floor((Math.random() * (ENEMY_DATA.ff_drop_max - ENEMY_DATA.ff_drop_min + 1) + ENEMY_DATA.ff_drop_min) * FF_MULT);
         addLog('🏆 HAI VINTO! Guadagnato: ' + xpGain + ' XP, ' + ffGain + ' Fragment');
 
         // Aggiungi XP e FF al salvataggio
@@ -271,6 +323,7 @@ function endBattle(victory, flee = false) {
             save.level = (save.level || 1) + 1;
             save.xp = save.xp - nextXp;
             save.levelUp = true;
+            playSfx('levelup');
             addLog('🎉 LEVEL UP! Sei ora al livello ' + save.level + '!');
         }
         localStorage.setItem('cardGameSave', JSON.stringify(save));

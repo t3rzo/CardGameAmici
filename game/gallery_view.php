@@ -109,7 +109,30 @@ if ($author_query !== "") {
                 <button class="collect-btn" id="fightBtn" onclick="window.location.href='?mode=game&card=<?php echo urlencode($matched_name); ?>';" style="margin-left: 10px; background: var(--cyber-pink); color: #fff;">
                     ⚔️ Combatti!
                 </button>
+
+                <!-- Equipment slots -->
+                <div style="width:100%; margin-top:15px; display:flex; gap:8px; justify-content:center;">
+                    <div class="equip-slot" data-slot="weapon" style="background:rgba(255,255,255,0.05); border:1px solid #444; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:11px; text-align:center;" onclick="openEquipModal('weapon')">
+                        <div style="font-size:18px;">🔪</div>Arma
+                        <div id="slotWeapon" style="color:#888; font-size:10px; margin-top:3px;">VUOTO</div>
+                    </div>
+                    <div class="equip-slot" data-slot="armor" style="background:rgba(255,255,255,0.05); border:1px solid #444; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:11px; text-align:center;" onclick="openEquipModal('armor')">
+                        <div style="font-size:18px;">🛡️</div>Armatura
+                        <div id="slotArmor" style="color:#888; font-size:10px; margin-top:3px;">VUOTO</div>
+                    </div>
+                    <div class="equip-slot" data-slot="accessory" style="background:rgba(255,255,255,0.05); border:1px solid #444; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:11px; text-align:center;" onclick="openEquipModal('accessory')">
+                        <div style="font-size:18px;">💍</div>Accessorio
+                        <div id="slotAccessory" style="color:#888; font-size:10px; margin-top:3px;">VUOTO</div>
+                    </div>
+                </div>
                 <?php endif; ?>
+
+                            <!-- Admin link -->
+                <div style="margin-top:12px;">
+                    <a href="admin.php" style="color:var(--rpg-gold); font-family:'Orbitron'; font-size:12px; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
+                        ℹ️ Aggiungi una Carta
+                    </a>
+                </div>
 
                 <!-- Rarity counter -->
                 <div class="rarities-counter" id="raritiesCounter"></div>
@@ -247,4 +270,102 @@ function triggerPasta() {
     }
 }
 document.addEventListener('click', (e) => { if(e.target !== input) suggBox.style.display = 'none'; });
+
+// =================== EQUIPAGGIAMENTO ===================
+const EQUIP_KEY = 'equippedItems';
+let equipped = JSON.parse(localStorage.getItem(EQUIP_KEY) || '{}');
+
+// Dati equipaggiamento (da PHP)
+const ALL_EQUIPMENT_PHP = <?php
+require_once __DIR__ . '/../config/equipment.php';
+echo json_encode($allEquipment);
+?>;
+
+// Carica equipaggiamento equipaggiato nella carta
+function loadCardEquip(cardName) {
+    const save = JSON.parse(localStorage.getItem('cardGameSave') || '{}');
+    const equippedSlots = save.equipped && save.equipped[cardName] || {};
+    ['weapon','armor','accessory'].forEach(slot => {
+        const el = document.getElementById('slot' + slot.charAt(0).toUpperCase() + slot.slice(1));
+        if (el && equippedSlots[slot]) {
+            el.textContent = `${equippedSlots[slot].nome}`;
+            const rarityColor = {'comune':'#7f8c8d','non-comune':'#27ae60','raro':'#2980b9','epico':'#8e44ab','leggendario':'#f1c40f','esotico':'#ff512f','mitico':'#e74c3c','segreto':'#00f2ff'};
+            el.style.color = rarityColor[equippedSlots[slot].rarity] || '#888';
+        }
+    });
+}
+
+function openEquipModal(slot) {
+    if (!matchedName) return;
+    const itemsOfType = ALL_EQUIPMENT_PHP.filter(item => item.tipo === slot);
+    let html = '<div style="padding:5px;">';
+    html += `<h3 style="color:var(--rpg-gold); font-family:'Orbitron'; margin-bottom:15px; font-size:16px;">${slot === 'weapon' ? '🔪 Armi' : slot === 'armor' ? '🛡️ Armature' : '💍 Accessori'}</h3>`;
+    if (itemsOfType.length === 0) {
+        html += '<p style="color:#888;">Nessun equipaggiamento disponibile.</p>';
+    } else {
+        const rarityColor = {'comune':'#7f8c8d','non-comune':'#27ae60','raro':'#2980b9','epico':'#8e44ab','leggendario':'#f1c40f','esotico':'#ff512f','mitico':'#e74c3c','segreto':'#00f2ff'};
+        itemsOfType.forEach(item => {
+            html += `<div style="background:rgba(0,0,0,0.3); border:1px solid ${rarityColor[item.rarity]||'#7f8c8d'}; border-radius:8px; padding:10px; margin-bottom:8px; cursor:pointer;" onclick="equipItem('${slot}', ${JSON.stringify(item)})">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:20px;">${item.slot_icon}</span>
+                    <div style="text-align:left;">
+                        <div style="font-weight:bold; color:${rarityColor[item.rarity]||'#7f8c8d'};">${item.nome}</div>
+                        <div style="font-size:10px; color:#aaa;">${item.desc.substring(0, 70)}</div>
+                        <div style="font-size:9px; color:#888; margin-top:3px;">
+                            ${item.attacco ? 'ATK+'+item.attacco+' ' : ''}${item.vita ? 'HP+'+item.vita+' ' : ''}${item.difesa ? 'DEF+'+item.difesa+' ' : ''}${item.velocità ? 'SPD'+(item.velocità>0?'+':'')+item.velocità+' ' : ''}${item.crit ? 'CRIT+'+(item.crit*100|0)+'% ' : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    }
+    html += '</div>';
+    showModal('Equipaggia ' + matchedName, html);
+}
+
+function showModal(title, contentHtml) {
+    const existing = document.getElementById('equipModal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'equipModal';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10001; display:flex; align-items:center; justify-content:center; padding:20px;';
+    modal.innerHTML = `
+        <div style="background:rgba(30,30,40,0.98); border:2px solid var(--rpg-gold); border-radius:15px; max-width:500px; width:100%; max-height:80vh; overflow-y:auto;">
+            <div style="padding:15px 20px; background:rgba(0,0,0,0.4); border-bottom:1px solid var(--rpg-gold); display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:var(--rpg-gold); font-family:'Orbitron'; margin:0;">${title}</h3>
+                <button onclick="closeModal()" style="background:transparent; border:none; color:#aaa; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:15px;">${contentHtml}</div>
+            <div style="padding:10px 20px; border-top:1px solid #333; text-align:right;">
+                <button onclick="closeModal()" class="collect-btn" style="margin-top:0; padding:8px 20px;">Chiudi</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeModal() {
+    const m = document.getElementById('equipModal');
+    if (m) m.remove();
+}
+
+function equipItem(slot, item) {
+    const save = JSON.parse(localStorage.getItem('cardGameSave') || '{}');
+    if (!save.equipped) save.equipped = {};
+    if (!save.equipped[matchedName]) save.equipped[matchedName] = {};
+    save.equipped[matchedName][slot] = item;
+    localStorage.setItem('cardGameSave', JSON.stringify(save));
+    loadCardEquip(matchedName);
+    const hint = document.createElement('div');
+    hint.textContent = '✓ ' + item.nome + ' equipaggiato!';
+    hint.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(39,174,98,0.2); border:1px solid #27ae60; color:#fff; padding:8px 16px; border-radius:8px; font-family:Orbitron; font-size:12px; z-index:10001;';
+    document.body.appendChild(hint);
+    setTimeout(() => hint.remove(), 2000);
+    closeModal();
+}
+
+// Carica equip su init se carta collezionata
+if (collection[matchedName]) {
+    setTimeout(() => loadCardEquip(matchedName), 100);
+}
 </script>

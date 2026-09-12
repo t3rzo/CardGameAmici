@@ -138,10 +138,30 @@ if ($author_query !== "") {
                 <div class="rarities-counter" id="raritiesCounter"></div>
             </div>
         </div>
+    <?php else: ?>
+        <!-- Welcome banner when no card selected -->
+        <div class="welcome-banner" style="max-width:550px; width:100%; text-align:center; padding:40px 20px; background:rgba(255,255,255,0.1); border-radius:20px; border:2px dashed var(--rpg-gold); margin-top:10px;">
+            <h2 style="font-family:'Orbitron'; color:var(--rpg-gold); font-size:24px; margin-bottom:15px;">
+                ✨ BENVENUTO NEL CARDS RPG ✨
+            </h2>
+            <p style="color:#ccc; font-size:14px; line-height:1.6; margin-bottom:20px;">
+                Benvenuto nel gioco! Cerca un guerriero con la barra sopra,<br>
+                oppure inizia subito tirando dal <strong style="color:var(--cyber-cyan);">Gacha</strong>!<br><br>
+                Ogni carta ha statistiche uniche: <strong>Attacco</strong>, <strong>Vita</strong>, <strong>Difesa</strong>, <strong>Velocità</strong>.
+                Colleziona carte, migliora i livelli, equipaggia armi e combatti nemici!
+            </p>
+            <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                <a href="?mode=gacha" class="gacha-btn single" style="text-decoration:none;">🎰 Inizia dal Gacha</a>
+                <a href="?mode=gallery&author=Michele%20Castaldo" class="gacha-btn" style="text-decoration:none; border-color:var(--raro); color:var(--raro);">📖 Guarda Prima Carta</a>
+            </div>
+            <p style="color:#888; font-size:11px; margin-top:15px; font-family:'Share Tech Mono';">
+                🇮🇹 {count($authors)} guerrieri disponibili | 8 rarità | Sistema level & equipaggiamenti
+            </p>
+        </div>
     <?php endif; ?>
 </div>
 
-<div style="margin-top:20px; text-align:center; opacity:0.5; font-size:12px; letter-spacing:1px;">
+<div style="margin-top:20px; text-align:center; opacity:0.5; font-size:12px; letter-spacing:1px; font-family:'Orbitron';">
     CARD RPG v1.0 — <?php echo count($authors); ?> GUERRIERI DISPONIBILI |
     <a href="?mode=gacha" style="color:var(--cyber-cyan);opacity:0.7;">→ Vai al Gacha ←</a>
 </div>
@@ -159,7 +179,8 @@ input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length < 0) { suggBox.style.display = 'none'; return; }
     // Filtra localmente invece di AJAX
-    const results = ALL_CARDS.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
+    const cardNames = Object.keys(ALL_CARDS);
+    const results = cardNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
     if (results.length > 0) {
         suggBox.innerHTML = results.map(n => `<div class="sugg-item">${n}</div>`).join('');
         suggBox.style.display = 'block';

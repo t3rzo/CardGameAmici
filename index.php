@@ -8,6 +8,19 @@ require_once __DIR__ . '/game/functions.php';
 $mode = $_GET['mode'] ?? 'gallery';
 $mode = in_array($mode, ['gallery', 'gacha', 'game', 'collection']) ? $mode : 'gallery';
 
+// Endpoint AJAX per autocomplete ricerca carte
+if (isset($_GET['ajax']) && isset($_GET['author'])) {
+    $q = trim($_GET['author']);
+    $authors = loadCards();
+    $found = [];
+    foreach ($authors as $name => $data) {
+        if ($q === '' || stripos($name, $q) !== false) { $found[] = $name; }
+    }
+    header('Content-Type: application/json');
+    echo json_encode(array_slice($found, 0, 10));
+    exit;
+}
+
 $authors = loadCards(); // Carica carte base + custom JSON
 ?>
 

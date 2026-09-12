@@ -66,7 +66,7 @@ $authors = loadCards(); // Carica carte base + custom JSON
         </div>
         <div class="hud-right">
             <div class="currency-display"><span class="ff-icon">💎</span> <span id="fFCount">0</span></div>
-            <button class="ctrl-btn" id="dailyTaskBtn" title="Task Giornaliera" onclick="checkDailyTask()" style="background:rgba(39,174,98,0.4); border-color:#27ae60; color:#27ae60;">🎁</button>
+            <button class="ctrl-btn" id="dailyTaskBtn" title="Task Giornalieri" onclick="openTasks()" style="background:rgba(39,174,98,0.4); border-color:#27ae60; color:#27ae60;">🎁</button>
             <button class="ctrl-btn" id="themeToggle" title="Cambia tema" onclick="toggleTheme()">◐</button>
             <button class="ctrl-btn" id="collectionToggle" title="Collezione" onclick="toggleCollection()">📚</button>
         </div>
@@ -104,6 +104,16 @@ $authors = loadCards(); // Carica carte base + custom JSON
         </div>
     </div>
     <div id="collectionOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:8999;display:none;" onclick="toggleCollection()"></div>
+
+    <!-- Daily Tasks Panel -->
+    <div class="tasks-panel" id="tasksPanel">
+        <div class="tasks-header">
+            <h3 style="margin:0; color:var(--rpg-gold); font-family:'Orbitron';">🎐 TASK GIORNALIERI</h3>
+            <button onclick="closeTasks()" style="background:transparent;border:none;color:#aaa;font-size:16px;cursor:pointer;">&times;</button>
+        </div>
+        <div id="tasksList"></div>
+    </div>
+    <div id="tasksOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:8999;display:none;" onclick="closeTasks()"></div>
 
     <!-- Scripts condivisi -->
     <script>
@@ -288,6 +298,51 @@ $authors = loadCards(); // Carica carte base + custom JSON
         document.getElementById('fFCount').textContent = save.fF;
         updateRaritiesCounter();
     });
+
+    // =================== TASK GIORNALIERI ===================
+    const TASKS_KEY = 'dailyTasks';
+    const DAILY_TASKS_DATA = <?php
+    require_once __DIR__ . '/config/tasks.php';
+    echo json_encode($dailyTasks);
+    ?>;
+
+    function openTasks() {
+        document.getElementById('tasksPanel').style.display = 'block';
+        document.getElementById('tasksOverlay').style.display = 'block';
+        renderTasks();
+    }
+    function closeTasks() {
+        document.getElementById('tasksPanel').style.display = 'none';
+        document.getElementById('tasksOverlay').style.display = 'none';
+    }
+
+    function renderTasks() {
+        const today = new Date().toDateString();
+        const tasks = JSON.parse(localStorage.getItem(TASKS_KEY) || '{}');
+        const dayTasks = tasks[today] || {};
+        const list = document.getElementById('tasksList');
+        if (!list) return;
+
+        list.innerHTML = DAILY_TASKS_DATA.map(t => {
+            const done = dayTasks[t.id] || false;
+            const color = done ? '#27ae60' : '#aaa';
+            return `<div style="background:rgba(255,255,255,0.05); border:1px solid ${done ? '#27ae60' : '#444'}; border-radius:8px; padding:10px; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">${t.icon}</span>
+                    <div style="text-align:left; flex:1;">
+                        <div style="font-weight:bold; color:${color}; font-size:13px;">${t.nome}</div>
+                        <div style="font-size:10px; color:#888;">${t.descrizione}</div>
+                    </div>
+                    <div style="font-family:Orbitron; font-size:12px; color:${done ? '#27ae60' : '#666'};">
+                        ${done ? '✓' : '○'} ${t.reward_amount}💎
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // Aggiorna pulsante task per aprire pannello
+    window.toggleTasks = function() { openTasks(); };
     </script>
 </body>
 </html>

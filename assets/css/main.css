@@ -427,3 +427,14 @@ body.light-mode .desc-box { background: rgba(240,240,250,0.95); }
 .card-enter-mitico { animation: cardPop 0.5s ease forwards, miticBorder 3s infinite; }
 .card-enter-esotico { animation: cardPop 0.5s ease forwards, exoticBreathe 3s ease-in-out infinite; }
 .card-enter-segreto { animation: cardPop 0.5s ease forwards, cosmicShake 4s infinite, borderPulse 2s infinite alternate; }
+
+/* ===== TASKS PANEL ===== */
+.tasks-panel {
+    position: fixed; right: -420px; top: 0; width: 400px; height: 100vh;
+    background: rgba(10, 10, 20, 0.97); border-left: 2px solid #27ae60;
+    box-shadow: -10px 0 40px rgba(39, 174, 98, 0.2);
+    z-index: 9001; transition: right 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    overflow-y: auto; padding: 30px 20px;
+}
+.tasks-panel.open { right: 0; }
+.tasks-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }

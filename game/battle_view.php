@@ -79,9 +79,12 @@ $enemyCurrentHp = $enemy['vita'];
         <!-- Nemico -->
         <div class="entity enemy" id="enemyEntity">
             <div class="entity-sprite" id="enemySprite">
-                <div style="font-size: 48px;">👾</div>
+                <img src="./images/<?php echo rawurlencode($enemy['img']); ?>"
+                     onerror="this.style.display='none'; document.getElementById('enemySprite').innerHTML='<div style=\"font-size:48px;\">👾</div>';"
+                     alt="<?php echo $enemy['nome']; ?>"
+                     style="max-width:100%; max-height:100%; filter: drop-shadow(0 0 15px rgba(231,76,60,0.5));">
             </div>
-            <div class="entity-name"><?php echo $enemy['nome']; ?></div>
+            <div class="entity-name"><?php echo $enemy['nome']; ?> <span style="color:#ff6b6b; font-size:12px;">[Lv.<?php echo $enemy['lvl']; ?>]</span></div>
         </div>
 
         <!-- Giocatore -->
@@ -233,10 +236,22 @@ function calcDamage(atk, def) {
     return Math.max(1, Math.floor(dmg));
 }
 
-// Animazione sprite
+// Animazione sprite (movimento + shake colpo)
 function animateSprite(element, isAttack) {
     element.style.transition = 'transform 0.15s ease';
     element.style.transform = isAttack ? 'translateX(20px)' : 'translateX(-20px)';
+    // Shake il nemico quando colpito
+    if (!isAttack) {
+        const enemySprite = document.getElementById('enemySprite');
+        enemySprite.style.animation = 'shake 0.4s';
+        setTimeout(() => { enemySprite.style.animation = ''; }, 400);
+    }
+    // Shake il giocatore quando colpito
+    if (isAttack) {
+        const playerSprite = document.getElementById('playerSprite');
+        playerSprite.style.animation = 'shake 0.4s';
+        setTimeout(() => { playerSprite.style.animation = ''; }, 400);
+    }
     setTimeout(() => {
         element.style.transform = 'translateX(0)';
     }, 200);
@@ -453,6 +468,13 @@ window.addEventListener('DOMContentLoaded', () => {
     width: 100%; max-width: 800px; margin: 0 auto;
     padding: 90px 20px 130px; position: relative;
     font-family: 'Orbitron', sans-serif;
+}
+
+@keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-5px) rotate(-2deg); }
+    50% { transform: translateX(5px) rotate(2deg); }
+    75% { transform: translateX(-5px) rotate(-2deg); }
 }
 
 .battle-hud {

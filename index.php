@@ -32,6 +32,16 @@ $authors = loadCards(); // Carica carte base + custom JSON
     <title>Card RPG - Ultra Collector</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./assets/css/main.css">
+    <!-- Dichiarazioni JS comuni in cima (per evitare conflitti di scope con le views) -->
+    <script>
+    const ALL_CARDS = <?php echo json_encode($authors ?? []); ?>;
+    const RARITY_WEIGHTS = <?php echo json_encode($rarityWeights ?? []); ?>;
+    const COLLECT_KEY = 'cardGameCollection';
+    const SAVE_KEY = 'cardGameSave';
+    const CURRENCY_KEY = 'gachaCurrency';
+    let collection = JSON.parse(localStorage.getItem(COLLECT_KEY) || '{}');
+    const DAILY_KEY = 'dailyTask';
+    </script>
     <style>
     /* ===== NAV A SCHEDE ===== */
     .tab-nav {
@@ -117,9 +127,7 @@ $authors = loadCards(); // Carica carte base + custom JSON
 
     <!-- Scripts condivisi -->
     <script>
-    // Dati carte in JS (per logica client-side gacha/inventario)
-    const ALL_CARDS = <?php echo json_encode($authors); ?>;
-    const RARITY_WEIGHTS = <?php echo json_encode($rarityWeights); ?>;
+    // (variabili comuni dichiarate in testa, vedi <head>)
 
     function switchMode(mode) {
         window.location.href = '?mode=' + mode;
@@ -133,11 +141,7 @@ $authors = loadCards(); // Carica carte base + custom JSON
         document.getElementById('themeToggle').classList.toggle('active');
     }
 
-    // Collezione
-    const COLLECT_KEY = 'cardGameCollection';
-    const SAVE_KEY = 'cardGameSave';
-    const CURRENCY_KEY = 'gachaCurrency';
-    let collection = JSON.parse(localStorage.getItem(COLLECT_KEY) || '{}');
+    // (collection/COLLECT_KEY dichiarati in testa)
 
     function updateRaritiesCounter() {
         const container = document.getElementById('raritiesCounter');

@@ -168,7 +168,8 @@ if ($author_query !== "") {
 const matchedName = "<?php echo $matched_name; ?>";
 const audioFile = <?php echo $audio_file ? json_encode($audioFile) : 'null'; ?>;
 const rarity = "<?php echo $rarity; ?>";
-let collection = JSON.parse(localStorage.getItem('cardGameCollection') || '{}');
+// collection globale definita in index.php script (COLLECT_KEY)
+// Questa view usa la variabile globale collection
 
 // Autocomplete
 const input = document.getElementById('authorInput');

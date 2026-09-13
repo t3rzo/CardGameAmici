@@ -19,8 +19,7 @@
 </div>
 
 <script>
-let collection = JSON.parse(localStorage.getItem('cardGameCollection') || '{}');
-
+// collection definita globalmente in index.php head
 window.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('collectionDetail');
     const names = Object.keys(collection);

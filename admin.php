@@ -13,7 +13,7 @@ function listCustomCards($path) {
 }
 
 // Salva carta custom
-if ($_POST['add_card']) {
+if (isset($_POST['add_card']) && $_POST['add_card']) {
     $newCard = [
         'name' => trim($_POST['name']),
         'desc' => trim($_POST['desc']),

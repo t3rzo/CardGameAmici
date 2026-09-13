@@ -12,15 +12,14 @@
     </div>
 
     <div style="margin-top:20px;">
-        <button class="gacha-btn" onclick="window.location.href='?mode=gacha'" style="margin-top:10px;">
-            ← Torna al Gacha
+        <button class="gacha-btn" onclick="window.location.href='?mode=gallery'" style="margin-top:10px;">
+            ← Torna alla Galleria
         </button>
     </div>
 </div>
 
 <script>
-let collection = JSON.parse(localStorage.getItem('cardGameCollection') || '{}');
-
+// collection definita globalmente in index.php head
 window.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('collectionDetail');
     const names = Object.keys(collection);

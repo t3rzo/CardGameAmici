@@ -50,7 +50,7 @@
 </div>
 
 <script>
-let collection = JSON.parse(localStorage.getItem('cardGameCollection') || '{}');
+// collection definita globalmente in index.php head
 let save = JSON.parse(localStorage.getItem('cardGameSave') || '{}');
 let fF = parseInt(localStorage.getItem('gachaCurrency') || '0');
 

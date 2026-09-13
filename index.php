@@ -87,7 +87,7 @@ $authors = loadCards(); // Carica carte base + custom JSON
         <div class="tab" onclick="switchMode('gallery')">🏠 Galleria</div>
         <div class="tab" onclick="switchMode('gacha')">🎰 Gacha</div>
         <div class="tab" onclick="switchMode('game')">⚔️ Combatti</div>
-        <div class="tab" onclick="switchMode('collections')">🎒 Collezione</div>
+        <div class="tab" onclick="switchMode('collection')">🎒 Collezione</div>
         <div class="tab"><a href="admin.php" style="color:inherit;text-decoration:none;">ℹ️ Admin</a></div>
     </div>
 

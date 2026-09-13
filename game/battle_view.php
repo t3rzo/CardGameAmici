@@ -261,11 +261,14 @@ $equipJson = json_encode($allEquipment);
         </div>
     </div>
 
-    <div class="battle-actions">
+    <div class="battle-actions" id="battleActions">
         <button class="action-btn attack" id="btnAttack" onclick="playerAttack()">⚔️ Attacca</button>
         <button class="action-btn skill" id="skillBtn" onclick="playerSkill()">⚡ Skill</button>
         <button class="action-btn item" onclick="useItem()">🧪 Item</button>
         <button class="action-btn flee" onclick="attemptFlee()">🏃 Scappa</button>
+        <!-- Bottone post-combattimento (nascosto inizialmente) -->
+        <button class="action-btn" id="nextZoneBtn" style="display:none; border-color:#f1c40f; color:#f1c40f;" onclick="goNextZone()">🗺️ Prossima Zona</button>
+        <button class="action-btn" id="retryBtn" style="display:none; border-color:#e74c3c; color:#e74c3c;" onclick="retryBattle()">🔄 Riprova</button>
     </div>
 
     <div class="battle-log" id="battleLog"></div>
@@ -456,6 +459,33 @@ function useItem() {
     setTimeout(() => enemyTurn(), 700);
 }
 
+// Zona corrente (passata da PHP)
+const CURRENT_ZONE = <?php echo json_encode($selectedZone); ?>;
+const ZONES_DATA = <?php echo json_encode(array_map(fn($z) => ['id' => $z['id'], 'nome' => $z['nome'], 'livello_min' => $z['livello_min']], $zones)); ?>;
+
+function getAvailableZones(playerLevel) {
+    return ZONES_DATA.filter(z => z.livello_min <= playerLevel);
+}
+function getNextZone(playerLevel) {
+    const available = getAvailableZones(playerLevel);
+    const currentIdx = available.findIndex(z => z.id === CURRENT_ZONE);
+    return available[currentIdx + 1] || null;
+}
+
+function goNextZone() {
+    const save = JSON.parse(localStorage.getItem('cardGameSave') || '{}');
+    const next = getNextZone(save.level || 1);
+    if (next) {
+        window.location.href = '?mode=game&card=' + encodeURIComponent(CARD_NAME) + '&zone=' + next.id;
+    } else {
+        addLog('🗺️ Nessuna zona sbloccabile! Completa sfide per salire di livello.');
+    }
+}
+
+function retryBattle() {
+    window.location.href = '?mode=game&card=' + encodeURIComponent(CARD_NAME) + '&zone=' + CURRENT_ZONE;
+}
+
 function attemptFlee() {
     if (Math.random() > 0.4) {
         addLog('🏃 Sei fuggito!');
@@ -538,7 +568,11 @@ function endBattle(victory, flee = false) {
         localStorage.setItem('gachaCurrency', ff.toString());
         const ffEl = document.getElementById('ffCount');
         if (ffEl) ffEl.textContent = ff;
-        setTimeout(() => window.location.href = '?mode=gacha', 2200);
+        // Mostra pulsante "Prossima Zona" se disponibile
+        setTimeout(() => {
+            const nextZoneBtn = document.getElementById('nextZoneBtn');
+            if (nextZoneBtn) nextZoneBtn.style.display = 'inline-block';
+        }, 500);
     } else {
         playSfx('hit');
         const save = JSON.parse(localStorage.getItem('cardGameSave') || '{}');
@@ -546,7 +580,11 @@ function endBattle(victory, flee = false) {
         save.xp = Math.max(0, (save.xp || 0) - lostXp);
         localStorage.setItem('cardGameSave', JSON.stringify(save));
         addLog('<span style="color:#e74c3c">💀 SCONFITTO!</span> Perditi ' + lostXp + ' XP.');
-        setTimeout(() => window.location.href = '?mode=gacha', 2000);
+        // Mostra comunque pulsante per riprovare
+        setTimeout(() => {
+            const retryBtn = document.getElementById('retryBtn');
+            if (retryBtn) retryBtn.style.display = 'inline-block';
+        }, 500);
     }
 }
 

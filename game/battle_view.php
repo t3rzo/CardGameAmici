@@ -11,9 +11,12 @@ $playerStats = null;
 
 if ($selectedCardName && isset($authors[$selectedCardName])) {
     $selectedCard = $authors[$selectedCardName];
+    // HP battle = stats vita × moltiplicatore (render giocabile)
+    $hpMult = 5;
     $playerStats = [
         'attacco'  => $selectedCard['stats']['forza'] ?? 50,
-        'vita'     => $selectedCard['stats']['mentalità'] ?? 50,
+        'vita'     => ($selectedCard['stats']['mentalità'] ?? 50) * $hpMult,
+        'maxVita'  => ($selectedCard['stats']['mentalità'] ?? 50) * $hpMult,
         'difesa'   => $selectedCard['stats']['tecnica'] ?? 50,
         'velocità' => $selectedCard['stats']['velocità'] ?? 50,
     ];
@@ -21,7 +24,7 @@ if ($selectedCardName && isset($authors[$selectedCardName])) {
 
 if (!$playerStats) {
     $selectedCardName = 'Michele Castaldo';
-    $playerStats = ['attacco' => 20, 'vita' => 20, 'difesa' => 15, 'velocità' => 15];
+    $playerStats = ['attacco' => 20, 'vita' => 100, 'maxVita' => 100, 'difesa' => 15, 'velocità' => 15];
 }
 
 $zone = null;
@@ -277,7 +280,7 @@ const PLAYER_SKILLS = <?php echo $skillsJson; ?>;
 const ALL_EQUIPMENT = <?php echo $equipJson; ?>;
 
 let playerHp = PLAYER_STATS.vita;
-const playerMaxHp = PLAYER_STATS.vita;
+const playerMaxHp = PLAYER_STATS.maxVita || PLAYER_STATS.vita;
 let enemyHp = ENEMY_DATA.vita;
 const enemyMaxHp = ENEMY_DATA.vita;
 let playerTurn = true;
@@ -358,10 +361,12 @@ function addLog(msg) {
 }
 
 function calcDamage(atk, def) {
-    let dmg = atk - (def * 0.25);
-    const isCrit = Math.random() < 0.08;
-    if (isCrit) { dmg *= 1.6; }
-    return Math.max(1, Math.floor(dmg));
+    // Formula bilanciata: danno minimo 3, massima riduzione difesa 60%
+    const reducedDef = def * 0.6;
+    let dmg = atk - reducedDef;
+    const isCrit = Math.random() < 0.10;
+    if (isCrit) { dmg *= 1.5; }
+    return Math.max(3, Math.floor(dmg));
 }
 
 function animateHit(spriteId) {

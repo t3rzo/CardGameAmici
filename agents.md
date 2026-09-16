@@ -664,3 +664,7 @@ Most importantly:
 **Do not stop at recommendations. Make the actual improvements in the repository.**
 
 Do the gacha screen only first. Don't touch battle, admin, or unrelated pages until I review the result.
+
+Never read a file in full. Use grep to locate the relevant section, 
+then read only that line range. Make targeted edits — never rewrite 
+a whole file.

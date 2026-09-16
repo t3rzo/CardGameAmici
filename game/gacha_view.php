@@ -30,16 +30,20 @@
             <div class="gacha-afford" id="gachaAfford"></div>
         </div>
 
-        <div class="gacha-rarity-strip" aria-label="Rarità ottenibili">
-            <span class="gacha-rarity-chip comune">Comune</span>
-            <span class="gacha-rarity-chip non-comune">Non-comune</span>
-            <span class="gacha-rarity-chip raro">Raro</span>
-            <span class="gacha-rarity-chip epico">Epico</span>
-            <span class="gacha-rarity-chip leggendario">Leggendario</span>
-            <span class="gacha-rarity-chip esotico">Esotico</span>
-            <span class="gacha-rarity-chip mitico">Mitico</span>
-            <span class="gacha-rarity-chip segreto">Segreto</span>
+        <div class="gacha-guarantee" role="note">
+            <span aria-hidden="true">🛡️</span>
+            <span><strong>Garanzia x10:</strong> l'ultima carta è <strong>Rara o superiore</strong>.</span>
         </div>
+
+        <div class="gacha-rarity-strip" aria-label="Rarità ottenibili e peso relativo">
+            <?php foreach ($rarityWeights ?? [] as $rwKey => $rwVal): ?>
+                <span class="gacha-rarity-chip <?= htmlspecialchars($rwKey) ?>" title="Peso gacha: <?= (float)$rwVal ?>">
+                    <?= htmlspecialchars(ucfirst(str_replace('-', ' ', $rwKey))) ?>
+                    <span class="chip-weight" aria-hidden="true"><?= rtrim(number_format((float)$rwVal, 1), '.') ?></span>
+                </span>
+            <?php endforeach; ?>
+        </div>
+        <p class="gacha-rarity-note">Numeri = peso relativo di ogni rarità (valori reali del config).</p>
 
         <div class="gacha-btns">
             <button type="button" class="gacha-btn single" id="pullSingle">
@@ -51,7 +55,6 @@
                 <span class="gacha-btn-meta">500 Fragment · 1 Raro+ garantito</span>
             </button>
         </div>
-        <p class="gacha-guarantee">x10: l'ultima carta è <strong>Rara o superiore</strong>.</p>
         <div class="gacha-hint" id="gachaHint" role="status"></div>
     </div>
 

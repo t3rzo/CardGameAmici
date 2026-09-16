@@ -146,6 +146,20 @@
 .gacha-rarity-chip.mitico { color: #ffd0c8; box-shadow: 0 0 14px rgba(231, 76, 60, 0.5); }
 .gacha-rarity-chip.segreto { color: #c8fbff; box-shadow: 0 0 16px rgba(0, 242, 255, 0.55); }
 
+.gacha-rarity-chip .chip-weight {
+    margin-left: 6px;
+    font-size: 8px;
+    opacity: 0.75;
+}
+
+.gacha-rarity-note {
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: #8a93a6;
+    margin: -12px auto 20px;
+}
+
 .gacha-btns {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -256,11 +270,19 @@
 }
 
 .gacha-guarantee {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 520px;
+    margin: 0 auto 16px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(41, 128, 185, 0.12);
+    border: 1px solid rgba(41, 128, 185, 0.45);
     font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    color: #9ec8f0;
-    margin-bottom: 8px;
+    font-size: 13px;
+    color: #cfe6ff;
 }
 
 .gacha-guarantee strong {

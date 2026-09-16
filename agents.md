@@ -665,6 +665,13 @@ Most importantly:
 
 Do the gacha screen only first. Don't touch battle, admin, or unrelated pages until I review the result.
 
-Never read a file in full. Use grep to locate the relevant section, 
-then read only that line range. Make targeted edits — never rewrite 
-a whole file.
+## Working rules
+
+- NEVER read a file in full. Use grep to find the relevant section,
+  then read only that line range.
+- Make targeted edits. Never rewrite an entire file.
+- Only touch the files named in the current task.
+- Do not change probabilities, summon costs, card stats, battle
+  calculations, or XP rules. If you find a logic bug, write it down
+  in a "Bugs found" section of your reply instead of fixing it.
+- When done, stop and list every file you changed and what you changed.
